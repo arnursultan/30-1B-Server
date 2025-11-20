@@ -18,7 +18,7 @@ def calculate_age(dob: date | None) -> int | None:
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user: User):
-        token = calculate_age(user.date_of_birth)
+        token = super().get_token(user)
 
         age = calculate_age(user.date_of_birth)
 
