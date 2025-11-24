@@ -23,7 +23,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
 
-    'GPTHero',
+    'Server',
 ]
 
 MIDDLEWARE = [
@@ -36,9 +36,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-AUTH_USER_MODEL = "GPTHero.User"
+AUTH_USER_MODEL = "Server.User"
 
-ROOT_URLCONF = 'Arly.urls'
+ROOT_URLCONF = 'Project.urls'
 
 TEMPLATES = [
     {
@@ -55,7 +55,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Arly.wsgi.application'
+WSGI_APPLICATION = 'Project.wsgi.application'
 
 DATABASES = {
     'default': {
