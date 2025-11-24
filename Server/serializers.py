@@ -1,12 +1,12 @@
 from datetime import date
-
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from typing import Optional
 
 User = get_user_model()
 
-def calculate_age(dob: date | None) -> int | None:
+def calculate_age(dob: Optional[date]) -> Optional[int]:
     if not dob:
         return None
     today = date.today()
@@ -24,13 +24,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         token["email"] = user.email
         token["username"] = user.username
-        token["age"] = age
+        token["age"] = age if age is not None else 0
         token["is_adult"] = bool(age is not None and age >= 18)
 
         return token
 
     def validate(self, attrs):
-        data = super(). validated_data(attrs)
+        data = super().validate(attrs)
         user = self.user
 
         age = calculate_age(user.date_of_birth)
@@ -40,7 +40,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "email": user.email,
             "username": user.username,
             "date_of_birth": user.date_of_birth,
-            "age": age,
+            "age": age if age is not None else 0,
             "is_adult": bool(age is not None and age >= 18),
             "is_staff": user.is_staff,
         }
