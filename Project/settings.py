@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+
+from django.conf.global_settings import AUTHENTICATION_BACKENDS
 from dotenv import load_dotenv
 from datetime import timedelta
 
@@ -30,7 +32,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    "allauth.socialaccount.provider.google",
+    "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.github",
 
     "dj_rest_auth",
@@ -38,6 +40,7 @@ INSTALLED_APPS = [
 
     'Server',
 ]
+
 
 SITE_ID = int(os.getenv("SITE_ID", 1))
 
@@ -132,7 +135,7 @@ DATABASES = {
 #         "HOST": os.getenv("DB_HOST"),
 #         "PORT": os.getenv("DB_PORT"),
 #     }
-}
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -157,9 +160,15 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    "allauth.account.auth_backends.AuthenticationBackend",
+)
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -170,12 +179,55 @@ REST_FRAMEWORK = {
     ),
 }
 
+REST_USE_JWT = True
+
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
-    "ALGORITHM": "HS256",
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_MINUTES", 15))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", 7))),
+    "ROTATE_REFRESH_TOKENS": True if os.getenv("JWT_ROTATE_REFRESH", "True").lower() == "true" else False,
+    "BLACKLIST_AFTER_ROTATION": True if os.getenv("JWT_BLACKLIST_AFTER_ROTATION", "True").lower() == "true" else False,
+    "ALGORITHM": os.getenv("JWT_ALGORITHM", "HS256"),
     "SIGNING_KEY": SECRET_KEY,
-    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_TYPES": tuple(os.getenv("AUTH_HEADER_TYPES", "Bearer").split(",")),
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
 }
+
+ACCOUNT_EMAIL_VERIFICATION = os.getenv("ACCOUNT_EMAIL_VERIFICATION", "optional")
+ACCOUNT_AUTHENTICATION_METHOD = os.getenv("ACCOUNT_AUTHENTICATION_METHOD", "username_email")
+ACCOUNT_EMAIL_REQUIRED = os.getenv("ACCOUNT_EMAIL_REQUIRED", "True").lower() == "true"
+SOCIALACCOUNT_QUERY_EMAIL = True
+
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+    },
+    "github": {
+        "SCOPE": ["user:email"],
+    },
+}
+
+
+if os.getenv("ENABLE_CORS", "False").lower() == "true":
+    INSTALLED_APPS += ["corsheaders"]
+    MIDDLEWARE.insert(0, "corsheaders.middleware.CorsMiddleware")
+    CORS_ALLOWED_ORIGINS = [u for u in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if u]
+
+CSRF_TRUSTED_ORIGINS = [u for u in os.getenv("CORS_TRUSTED_ORIGINS", "").split(",") if u]
+
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": LOG_LEVEL},
+}
+
+if DEBUG:
+    print("DEBUG mode is on")
+    print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+    print(f"SITE_ID: {SITE_ID}")
