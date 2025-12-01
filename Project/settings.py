@@ -13,18 +13,33 @@ DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+
     'rest_framework',
+    'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
 
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.provider.google",
+    "allauth.socialaccount.providers.github",
+
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
+
     'Server',
 ]
+
+SITE_ID = int(os.getenv("SITE_ID", 1))
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -36,6 +51,49 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+JAZZMIN_SETTINGS = {
+    "site_title": "Administration panel",
+    "site_header": "Library",
+    "site_brand": "Server 30-1B",
+    "welcome_sign": "Welcome to the Server 30-1B admin panel",
+    "copyright": "Geeks",
+    "search_model": ["auth.User", "auth.Group"],
+    "topmenu_links": [
+        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Support", "url": "https://t.me/ar_nursultan", "new_window": True},
+        {"model": "auth.User"},
+    ],
+    "show_sidebar": True,
+    "changeform_format": "horizontal_tabs",
+}
+
+JAZZMIN_UI_TWEAKS = {
+    #  Light themes
+    # "theme" : "flatly",
+    # "theme" : "simplex",
+    # "theme" : "cerulean",
+    # "theme" : "cosmo",
+    # "theme" : "journal",
+    # "theme" : "litera",
+    # "theme" : "lumen",
+    # "theme" : "lux",
+    # "theme" : "materia",
+    # "theme" : "minty",
+    # "theme" : "pulse",
+    # "theme" : "sandstone",
+    # "theme" : "simplex",
+    # "theme" : "sketchy",
+    # "theme" : "spacelab",
+    # "theme" : "united",
+    # "theme" : "yeti",
+    #  Dark themes
+    "theme": "darkly",
+    # "theme" : "slate",
+    # "theme" : "cyborg",
+    # "theme" : "solar",
+    # "theme" : "superhero",
+}
+
 AUTH_USER_MODEL = "Server.User"
 
 ROOT_URLCONF = 'Project.urls'
@@ -43,10 +101,11 @@ ROOT_URLCONF = 'Project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -62,6 +121,17 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
+}
+
+# DATABASES = {
+#     'default': {
+#         "ENGINE": "django.db.backends.postgresql_psycopg2",
+#         "NAME": os.getenv("DB_NAME"),
+#         "USER": os.getenv("DB_USER"),
+#         "PASSWORD": os.getenv("DB_PASSWORD"),
+#         "HOST": os.getenv("DB_HOST"),
+#         "PORT": os.getenv("DB_PORT"),
+#     }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
