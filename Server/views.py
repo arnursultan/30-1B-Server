@@ -9,6 +9,12 @@ from rest_framework_simplejwt.exceptions import TokenError
 from .serializers import CustomTokenObtainPairSerializer, UserSerializer
 from .permissions import IsAdult
 
+from dj_rest_auth.registration.views import SocialLoginView
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
+
+from .social_serializers import CustomSocialLoginSerializer
+
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -56,3 +62,47 @@ class AdultOnlySecretView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+PROVIDERS = {
+    "google": GoogleOAuth2Adapter,
+    "github": GitHubOAuth2Adapter,
+}
+
+class UniversalSocialJWTLogin(APIView):
+    def post(self, request, provider):
+        provider = provider.lower()
+
+        if provider not in PROVIDERS:
+            return Response(
+                {"detail": f"Провайдер '{provider}' не поддерживается."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        adapter_class = PROVIDERS[provider]
+
+        view = SocialLoginView.as_view(
+            adapter_class=adapter_class,
+            serializer_class=CustomSocialLoginSerializer
+        )
+
+        social_response = view(request._request)
+
+        if social_response.status_code >= 400:
+            return social_response
+
+        user = social_response.context_data["user"]
+
+        refresh = RefreshToken.for_user(user)
+
+        data = {
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "provider": provider,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+            },
+        }
+
+        return Response(data, status=200)
