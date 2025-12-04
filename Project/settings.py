@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-from django.conf.global_settings import AUTHENTICATION_BACKENDS
 from dotenv import load_dotenv
 from datetime import timedelta
 
@@ -50,6 +49,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -185,9 +185,15 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
 }
 
-ACCOUNT_EMAIL_VERIFICATION = os.getenv("ACCOUNT_EMAIL_VERIFICATION", "optional")
-ACCOUNT_AUTHENTICATION_METHOD = os.getenv("ACCOUNT_AUTHENTICATION_METHOD", "username_email")
-ACCOUNT_EMAIL_REQUIRED = os.getenv("ACCOUNT_EMAIL_REQUIRED", "True").lower() == "true"
+ACCOUNT_LOGIN_METHODS = set(
+    os.getenv("ACCOUNT_LOGIN_METHODS", "email,username").replace(" ", "").split(",")
+)
+
+ACCOUNT_SIGNUP_FIELDS = os.getenv(
+    "ACCOUNT_SIGNUP_FIELDS",
+    "email*,username*,password1*,password2*"
+).replace(" ", "").split(",")
+
 SOCIALACCOUNT_QUERY_EMAIL = True
 
 LOGIN_REDIRECT_URL = "/"
